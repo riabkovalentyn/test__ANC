@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+
+{% block title %}Employee List{% endblock %}
+
+{% block content %}
+<h1>Employee List</h1>
+<form id="search-form" method="GET">
+    <div class="form-group">
+        <input type="text" id="search-query" name="query" value="{{ query }}" class="form-control" placeholder="Search...">
+    </div>
+    <button type="submit" class="btn btn-primary">Search</button>
+</form>
+<div id="employee-table">
+    {% include 'employees/employee_table.html' %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    $('#search-form').on('submit', function(event) {
+        event.preventDefault();
+        var query = $('#search-query').val();
+        $.ajax({
+            url: "{% url 'employee_list' %}",
+            data: {
+                query: query,
+                sort_by: "{{ sort_by }}"
+            },
+            success: function(data) {
+                $('#employee-table').html($(data).find('#employee-table').html());
+            }
+        });
+    });
+
+    $('#employee-table').on('click', 'a.sort-link', function(event) {
+        event.preventDefault();
+        var sort_by = $(this).data('sort');
+        var query = $('#search-query').val();
+        $.ajax({
+            url: "{% url 'employee_list' %}",
+            data: {
+                query: query,
+                sort_by: sort_by
+            },
+            success: function(data) {
+                $('#employee-table').html($(data).find('#employee-table').html());
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

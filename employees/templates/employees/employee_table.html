@@ -1,0 +1,21 @@
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th><a href="#" class="sort-link" data-sort="full_name">Full Name</a></th>
+            <th><a href="#" class="sort-link" data-sort="position">Position</a></th>
+            <th><a href="#" class="sort-link" data-sort="hire_date">Hire Date</a></th>
+            <th><a href="#" class="sort-link" data-sort="email">Email</a></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for employee in employees %}
+            <tr>
+                <td>{{ employee.full_name }}</td>
+                <td>{{ employee.position }}</td>
+                <td>{{ employee.hire_date }}</td>
+                <td>{{ employee.email }}</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
