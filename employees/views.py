@@ -1,11 +1,13 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.db.models import Q
 from .models import Employee
+from .forms import EmployeeForm
 
 
 def employee_hierarchy(request):
     top_lvl_employees = Employee.objects.filter(manager__isnull=True)
-    return render(request, 'employees/hierarchy.html', {'employees': top_lvl_employees})
+    return render(request, 'employees/employee_hierarchy.html', {'employees': top_lvl_employees})
 
 
 def employee_list(request):
@@ -19,4 +21,35 @@ def employee_list(request):
             Q(position__icontains=query) |
             Q(email__icontains=query)
         )
-    return render(request, 'employees/list.html', {'employees': employees, 'query': query, 'sort_by': sort_by})
+    return render(request, 'employees/employee_list.html', {'employees': employees, 'query': query, 'sort_by': sort_by})
+
+
+def employee_create(request):
+    if request.method == 'POST':
+        form = EmployeeForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('employee_list')
+    else:
+        form = EmployeeForm()
+    return render(request, 'employees/employee_form.html', {'form': form})
+
+
+def employee_update(request, pk):
+    employee = get_object_or_404(Employee, pk=pk)
+    if request.method == 'POST':
+        form = EmployeeForm(request.POST, instance=employee)
+        if form.is_valid():
+            form.save()
+            return redirect('employee_list')
+    else:
+        form = EmployeeForm(instance=employee)
+    return render(request, 'employees/employee_form.html', {'form': form})
+
+
+def employee_delete(request, pk):
+    employee = get_object_or_404(Employee, pk=pk)
+    if request.method == 'POST':
+        employee.delete()
+        return redirect('employee_list')
+    return render(request, 'employees/employee_confirm_delete.html', {'employee': employee})
