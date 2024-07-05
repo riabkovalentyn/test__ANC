@@ -3,6 +3,8 @@ from django.urls import reverse
 from django.db.models import Q
 from .models import Employee
 from .forms import EmployeeForm
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 
 
 def employee_hierarchy(request):
@@ -53,3 +55,34 @@ def employee_delete(request, pk):
         employee.delete()
         return redirect('employee_list')
     return render(request, 'employees/employee_confirm_delete.html', {'employee': employee})
+
+
+def build_employee_tree(employees, parent_id=None):
+    tree_html = '<ul>'
+    for employee in employees:
+        if employee.manager_id == parent_id:
+            tree_html += f'<li data-id="{employee.id}">{employee.full_name} - {employee.position}'
+            tree_html += build_employee_tree(employees, employee.id)
+            tree_html += '</li>'
+    tree_html += '</ul>'
+    return tree_html
+
+
+def employee_hierarchy(request):
+    employees = Employee.objects.all()
+    return render(request, 'employees/employee_hierarchy.html', {'employees': employees})
+
+
+def change_manager(request):
+    if request.method == 'POST':
+        employee_id = request.POST.get('employee_id')
+        new_manager_id = request.POST.get('new_manager_id')
+        try:
+            employee = Employee.objects.get(pk=employee_id)
+            new_manager = Employee.objects.get(pk=new_manager_id)
+            employee.manager = new_manager
+            employee.save()
+            return JsonResponse({'success': True})
+        except Employee.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Employee or manager does not exist'})
+    return JsonResponse({'success': False, 'error': 'Invalid request method'})

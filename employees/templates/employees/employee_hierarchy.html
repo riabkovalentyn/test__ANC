@@ -4,16 +4,39 @@
 
 {% block content %}
 <h1>Employee Hierarchy</h1>
-<ul class="list-group">
-    {% for employee in employees %}
-        <li class="list-group-item">
-            {{ employee.full_name }} - {{ employee.position }}
-            <ul class="list-group ml-4">
-                {% for subordinate in employee.subordinates.all %}
-                    <li class="list-group-item">{{ subordinate.full_name }} - {{ subordinate.position }}</li>
-                {% endfor %}
-            </ul>
-        </li>
-    {% endfor %}
+<ul id="employee-tree">
+    {{ employee_tree|safe }}
 </ul>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(function() {
+    $("#employee-tree").sortable({
+        connectWith: "#employee-tree",
+        update: function(event, ui) {
+            var employeeId = ui.item.data('id');
+            var newManagerId = ui.item.parents('li').data('id');
+            if (newManagerId) {
+                $.ajax({
+                    url: "{% url 'change_manager' %}",
+                    method: 'POST',
+                    data: {
+                        'employee_id': employeeId,
+                        'new_manager_id': newManagerId,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(data) {
+                        if (data.success) {
+                            alert("Manager updated successfully!");
+                        } else {
+                            alert("Error updating manager.");
+                        }
+                    }
+                });
+            }
+        }
+    }).disableSelection();
+});
+</script>
 {% endblock %}
